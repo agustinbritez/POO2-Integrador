@@ -783,31 +783,39 @@ public class Controlador {
     }
 
     public Boolean eliminarUsuario(Usuario usuario) {
-        Long id = usuario.getId();
-        UsuarioAcademico usuarioA = this.buscarUsuarioAcademico(id);
-        Boolean asociaciones = false;
-        this.persistencia.iniciarTransaccion();
-        if (usuarioA != null) {
-            List<Pregunta> preguntas = usuarioA.getPreguntas();
-            List<Respuesta> respuestas = usuarioA.getRespuestas();
-            List<Voto> votos = usuarioA.getVotos();
-            if (preguntas.isEmpty() && respuestas.isEmpty() && votos.isEmpty()) {
-                this.persistencia.eliminar(usuarioA);
-            } else {
-                asociaciones = true;
-            }
-        }
-        if (!asociaciones) {
-            this.persistencia.eliminar(usuario);
-            return true;
-        }
-        //si no es un usuario academico es un registrador
 
-        this.persistencia.confirmarTransaccion();
+        this.persistencia.iniciarTransaccion();
+        try {
+            Long id = usuario.getId();
+            UsuarioAcademico usuarioA = this.buscarUsuarioAcademico(id);
+            Boolean asociaciones = false;
+            this.persistencia.eliminar(usuario);
+            if (usuarioA != null) {
+                List<Pregunta> preguntas = usuarioA.getPreguntas();
+                List<Respuesta> respuestas = usuarioA.getRespuestas();
+                List<Voto> votos = usuarioA.getVotos();
+                if (preguntas.isEmpty() && respuestas.isEmpty() && votos.isEmpty()) {
+                    this.persistencia.eliminar(usuarioA);
+
+                } else {
+                    asociaciones = true;
+                }
+            }
+            if (!asociaciones) {
+                this.persistencia.eliminar(usuario);
+                this.persistencia.confirmarTransaccion();
+                return true;
+            }
+            //si no es un usuario academico es un registrador
+
+            this.persistencia.confirmarTransaccion();
+        } catch (Exception ex) {
+            this.persistencia.descartarTransaccion();
+            return false;
+        }
         return false;
     }
 
-    
     public void cambiarPassUsuario(Usuario usuario, String pass) {
         this.persistencia.iniciarTransaccion();
         usuario.setPassword(pass);

@@ -18,6 +18,7 @@ import javax.persistence.Table;
  * @author Admin
  */
 @Entity
+@Table
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Usuario implements Serializable {
 
